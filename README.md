@@ -26,7 +26,7 @@
 ```
 
 ### Train model
-* STEP 3. Run the following command.
+* Run the following command.
 ```
 python train.py --target 'bottle' -c 0 --lr 0.001
 ```
