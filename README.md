@@ -9,7 +9,7 @@
   - Dataset: [MVTec Anomaly Detection Dataset]
   
   
-  ### Dataset structure
+### Dataset structure
 
 ```
 ./data   
@@ -24,8 +24,14 @@
 ├── grid
 
 ```
+
+### Train model
+* STEP 3. Run the following command.
+```
+python train.py --target 'bottle' -c 0 --lr 0.001
+```
   
-  ### Reference
+### Reference
 1. [to do]
 
 
