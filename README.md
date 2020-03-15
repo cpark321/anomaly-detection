@@ -9,6 +9,22 @@
   - Dataset: [MVTec Anomaly Detection Dataset]
   
   
+  ### Dataset structure
+
+```
+./data   
+│
+├── bottle
+│   ├── ground_truth
+│   ├── train
+│   └── test
+│
+├── carpet
+├── leather
+├── grid
+
+```
+  
   ### Reference
 1. [to do]
 
