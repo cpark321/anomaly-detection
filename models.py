@@ -2,6 +2,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+import torchvision.models as models
 from torch.utils.data import DataLoader, Dataset
 
 class MVTecSimpleCNN(nn.Module):
@@ -34,4 +35,24 @@ class MVTecSimpleCNN(nn.Module):
         x = self.sigmoid(self.fc2(x))
 
         return x
+
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
+
+class MVTecResNet(nn.Module):
+    def __init__(self):
+        super(MVTecResNet, self).__init__()
+        self.model = models.resnet18(pretrained=True)
+        # self.model.fc = Identity()   --> fc layer 결정을 위한 test -> 256x256 input 시 512
+        self.model.fc = nn.Sequential(
+            nn.Linear(512,1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x):
+        return self.model(x)
 

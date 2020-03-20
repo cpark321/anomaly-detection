@@ -13,3 +13,18 @@ transistor    :0.9079
 wood          :0.9467
 toothbrush    :0.8947
 cable         :0.9518
+resnet18 metal_nut      :0.9688
+resnet18 tile           :0.9740
+resnet18 leather        :1.0000
+resnet18 grid           :0.9765
+resnet18 pill           :0.9884
+resnet18 carpet         :0.9884
+resnet18 bottle         :0.9839
+resnet18 screw          :0.9720
+resnet18 capsule        :0.9565
+resnet18 zipper         :0.9868
+resnet18 toothbrush     :0.6316
+resnet18 hazelnut       :1.0000
+resnet18 transistor     :0.9737
+resnet18 wood           :1.0000
+resnet18 cable          :0.9880
