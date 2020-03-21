@@ -15,11 +15,13 @@ parser.add_argument('-c', '--no_cuda', required=False, default=None, help='which
 parser.add_argument('--lr', default= 0.001, type=float , required=False, help='learning rate')
 parser.add_argument('--no_epoch', default= 30, type= int, required=False, help='number of epochs')
 parser.add_argument('--model', default= 'simpleCNN', required=True, help='simpleCNN, resnet18')
+# parser.add_argument('--freeze', default= True, type=bool, required=False, help='freeze pre-trained weights')
 
 args = parser.parse_args()
 
 target_class = args.target
 model_type = args.model
+# model_freeze = args.freeze
 
 save_path = os.path.join('./saves/', target_class)
 
@@ -119,7 +121,7 @@ test_acc = evaluate_accuracy(model, test_loader, device)
 print('Final test acc : ', test_acc)
 
 with open('./saves/test_results.txt', 'a') as f:
-    f.write('resnet18 {:15}:{:.4f}\n'.format(target_class, test_acc))
+    f.write('resnet18 freezed {:15}:{:.4f}\n'.format(target_class, test_acc))
 
 
 

@@ -47,6 +47,13 @@ class MVTecResNet(nn.Module):
     def __init__(self):
         super(MVTecResNet, self).__init__()
         self.model = models.resnet18(pretrained=True)
+
+
+        # if model_freeze:      --> model freeze: 성능 좋지 않았음. 정확도 5% 이상 감소
+        #     for param in self.model.parameters():
+        #         param.requires_grad = False
+
+
         # self.model.fc = Identity()   --> fc layer 결정을 위한 test -> 256x256 input 시 512
         self.model.fc = nn.Sequential(
             nn.Linear(512,1),
