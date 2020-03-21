@@ -2,6 +2,7 @@
 
 - Anomaly detection  
   1. vanilla CNN (supervised)
+  2. resnet18 (supervised)
 
 - Dependencies
   - Python 3.6+
