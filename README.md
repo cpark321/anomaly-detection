@@ -2,6 +2,7 @@
 
 - Anomaly detection  
   1. vanilla CNN (supervised)
+  2. resnet18 (supervised)
 
 - Dependencies
   - Python 3.6+
@@ -28,7 +29,7 @@
 ### Train model
 * Run the following command.
 ```
-python train.py --target 'bottle' -c 0 --lr 0.001
+python train.py --target 'bottle' --model 'resnet18' -c 0 --lr 0.001
 ```
   
 ### Reference
