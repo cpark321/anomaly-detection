@@ -29,7 +29,7 @@
 ### Train model
 * Run the following command.
 ```
-python train.py --target 'bottle' --model 'resnet18' -c 0 --lr 0.001
+python train.py --target bottle --model resnet18 -c 0 --lr 0.001
 ```
   
 ### Reference
