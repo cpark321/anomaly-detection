@@ -29,13 +29,13 @@
 ### Train model
 * Run the following command.
 ```
-python train.py --target 'bottle' --model 'resnet18' -c 0 --lr 0.001
+python train.py --target bottle --model resnet18 -c 0 --lr 0.001
 ```
   
 ### Reference
-1. [to do]
+1. [bayesian-optimization python library]
 
 
 [MVTec Anomaly Detection Dataset]: https://www.mvtec.com/company/research/datasets/mvtec-ad/
-
+[bayesian-optimization python library]: https://github.com/fmfn/BayesianOptimization
    
