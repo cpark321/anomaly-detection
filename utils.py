@@ -32,6 +32,11 @@ def evaluate_accuracy(model, dataloader, device):
             correct += (predicted == label).sum().item()
     return correct / total
 
+def getFileList(normal_data_dir, abnormal_data_dir):
+        normal_data = generate_file_list(normal_data_dir)
+        abnormal_data = generate_file_list(abnormal_data_dir)
+        
+        return np.array(normal_data), np.array(abnormal_data)
 
 class MVTecDataset(Dataset):
     def __init__(self, normal_data_dir, abnormal_data_dir):
@@ -62,4 +67,40 @@ class MVTecDataset(Dataset):
         img = self.transform(img)
         label = self.label_list[index]
         return (img, label)
+        
 
+        
+class MVTecActiveDataset(Dataset):
+    def __init__(self, normal_data, abnormal_data, isUnlabeled):
+        super(MVTecActiveDataset, self).__init__()        
+        self.transform = transforms.Compose(
+            [transforms.Resize([300, 300]), transforms.RandomCrop(256), transforms.RandomHorizontalFlip(), \
+             transforms.ToTensor(), transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])        
+        
+        self.normal_data = normal_data.tolist()
+        self.abnormal_data = abnormal_data.tolist()
+        
+        self.normal_label = [1 for x in range(len(normal_data))]
+        self.abnormal_label = [0 for x in range(len(abnormal_data))]        
+
+        if isUnlabeled:
+            ratio=1
+        else:
+            ratio= int(len(self.normal_label) / len(self.abnormal_label))
+        
+        self.data_list = self.normal_data + self.abnormal_data * ratio
+        self.label_list = self.normal_label + self.abnormal_label * ratio
+
+    def __len__(self):
+        return len(self.label_list)
+
+    def __getitem__(self, index):
+        image_name = self.data_list[index]
+        img = Image.open(image_name)
+
+        if len(np.array(img).shape) == 2:
+            img = img.convert(mode="RGB")
+
+        img = self.transform(img)
+        label = self.label_list[index]
+        return (img, label)

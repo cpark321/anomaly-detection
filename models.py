@@ -63,3 +63,34 @@ class MVTecResNet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+class MVTecCNN_BO(nn.Module):
+    def __init__(self, num_channel):
+        super(MVTecCNN_BO, self).__init__()
+        self.num_channel = num_channel
+        self.conv1 = nn.Conv2d(3, num_channel, kernel_size=5, stride=2)
+        self.bn1 = nn.BatchNorm2d(num_channel)
+        self.conv2 = nn.Conv2d(num_channel, num_channel*2, kernel_size=5)
+        self.bn2 = nn.BatchNorm2d(num_channel*2)
+        self.conv3 = nn.Conv2d(num_channel*2, num_channel*4, 5)
+        self.bn3 = nn.BatchNorm2d(num_channel*4)
+        self.conv4 = nn.Conv2d(num_channel*4, num_channel*8, 3)
+        self.bn4 = nn.BatchNorm2d(num_channel*8)
+        self.pool = nn.MaxPool2d(2)
+        self.relu = nn.ReLU()
+
+        self.fc1 = nn.Linear(num_channel*8*5*5, 128)
+        self.bn_fc1 = nn.BatchNorm1d(128)
+        self.fc2 = nn.Linear(128, 1)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.bn1(self.conv1(x))))
+        x = self.pool(self.relu(self.bn2(self.conv2(x))))
+        x = self.pool(self.relu(self.bn3(self.conv3(x))))
+        x = self.pool(self.relu(self.bn4(self.conv4(x))))
+
+        x = x.view(-1, self.num_channel*8*5*5)
+        x = self.relu(self.bn_fc1(self.fc1(x)))
+        x = self.sigmoid(self.fc2(x))
+
+        return x
