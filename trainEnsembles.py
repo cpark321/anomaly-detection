@@ -91,7 +91,7 @@ unlabeled_dataset = MVTecActiveDataset(unlabeled_normal_data_list, unlabeled_abn
 labeled_dataset = MVTecActiveDataset(labeled_normal_data_list, labeled_abnormal_data_list, isUnlabeled=False)
 
 val_num = int(len(labeled_dataset)*0.15)
-test_num = int(len(labeled_dataset)*0.20)
+test_num = int(len(labeled_dataset)*0.375)
 train_num = len(labeled_dataset)  - val_num - test_num
 
 train_dataset, valid_dataset, test_dataset =random_split(labeled_dataset,[train_num, val_num, test_num])
