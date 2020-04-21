@@ -19,6 +19,7 @@ def generate_file_list(list_dir):
 
 
 def evaluate_accuracy(model, dataloader, device):
+    model.eval()
     correct = 0
     total = 0
     with torch.no_grad():
@@ -30,6 +31,7 @@ def evaluate_accuracy(model, dataloader, device):
             predicted = (outputs.data > 0.5).float().to(device)
             total += label.size(0)
             correct += (predicted == label).sum().item()
+    model.train()
     return correct / total
 
 def getFileList(normal_data_dir, abnormal_data_dir):

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, Subset, ConcatDataset
 from utils import MVTecDataset, MVTecActiveDataset, evaluate_accuracy, getFileList
 from models import MVTecCNN_BO
 
@@ -52,122 +52,20 @@ if args.no_cuda is not None:
     
 device = torch.device(device_type if torch.cuda.is_available() else 'cpu')
 
-def loadActiveDataset(target_class):
-    normal_list_dir = [os.path.join('./data/', target_class, 'train', 'good'), os.path.join('./data/', target_class, 'test', 'good')]
 
-    test_dir = os.path.join('./data/', target_class, 'test')
-    test_subfolders = next(os.walk(test_dir))[1]
-
-    abnormal_list_dir=[]
-    
-    for item in test_subfolders:
-        if item != 'good':
-            abnormal_list_dir.append(os.path.join('./data/', target_class, 'test', item))
-    
-    normal_file_list, abnormal_file_list = getFileList(normal_list_dir, abnormal_list_dir)
-    normal_rand_idx = np.random.permutation(len(normal_file_list))
-    abnormal_rand_idx = np.random.permutation(len(abnormal_file_list))
-    
-    unlabeled_normal_num = int(unlabeled_ratio*len(normal_file_list))
-    unlabeled_abnormal_num = int(unlabeled_ratio*len(abnormal_file_list))
-    
-    unlabeled_normal_data_list = normal_file_list[normal_rand_idx[:unlabeled_normal_num]]
-    unlabeled_abnormal_data_list = abnormal_file_list[abnormal_rand_idx[:unlabeled_abnormal_num]]
-    
-    labeled_normal_data_list = normal_file_list[normal_rand_idx[unlabeled_normal_num:]]
-    labeled_abnormal_data_list = abnormal_file_list[abnormal_rand_idx[unlabeled_abnormal_num:]]
-    
-    return labeled_normal_data_list, labeled_abnormal_data_list, unlabeled_normal_data_list, unlabeled_abnormal_data_list
-
-def loadActiveDataset(target_class):
-    normal_list_dir = [os.path.join('./data/', target_class, 'train', 'good'), os.path.join('./data/', target_class, 'test', 'good')]
-
-    test_dir = os.path.join('./data/', target_class, 'test')
-    test_subfolders = next(os.walk(test_dir))[1]
-
-    abnormal_list_dir=[]
-    
-    for item in test_subfolders:
-        if item != 'good':
-            abnormal_list_dir.append(os.path.join('./data/', target_class, 'test', item))
-    
-    normal_file_list, abnormal_file_list = getFileList(normal_list_dir, abnormal_list_dir)
-    normal_rand_idx = np.random.permutation(len(normal_file_list))
-    abnormal_rand_idx = np.random.permutation(len(abnormal_file_list))
-    
-    unlabeled_normal_num = int(unlabeled_ratio*len(normal_file_list))
-    unlabeled_abnormal_num = int(unlabeled_ratio*len(abnormal_file_list))
-    
-    unlabeled_normal_data_list = normal_file_list[normal_rand_idx[:unlabeled_normal_num]]
-    unlabeled_abnormal_data_list = abnormal_file_list[abnormal_rand_idx[:unlabeled_abnormal_num]]
-    
-    labeled_normal_data_list = normal_file_list[normal_rand_idx[unlabeled_normal_num:]]
-    labeled_abnormal_data_list = abnormal_file_list[abnormal_rand_idx[unlabeled_abnormal_num:]]
-    
-    return labeled_normal_data_list, labeled_abnormal_data_list, unlabeled_normal_data_list, unlabeled_abnormal_data_list
-
-def save_esemble_models(best_val_acc, net):
-    if np.min(best_accuracies) < best_val_acc:
-        idx = np.argmin(best_accuracies)
-        best_models[idx] = net
-        best_accuracies[idx] = best_val_acc    
-        
-def train(lr, num_channel):        
-    net = MVTecCNN_BO(num_channel).to(device)
-    criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
-    best_val_acc = 0.    
-    num_epoch = 30  #수정 30
-    
-    scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
-    
-    for epoch in range(num_epoch):
-        loss_count=0
-        loss_sum=0
-        for idx, (img, label) in enumerate(train_loader):
-            img = img.to(device)
-            label = label.to(device, dtype=torch.float)
-            label = label.view(-1,1)
-            pred = net(img)
-
-            optimizer.zero_grad()
-            loss = criterion(pred, label)
-            loss.backward()
-            optimizer.step()
-
-            loss_sum+=loss.item()
-            loss_count+=1
-            if idx%10==0:
-                net.eval()
-                val_acc = evaluate_accuracy(net, valid_loader, device)
-                if val_acc > best_val_acc:
-                    best_val_acc = val_acc                    
-                best_model = copy.deepcopy(net)
-                net.train()        
-        scheduler.step()
-        
-    save_esemble_models(best_val_acc, best_model.eval())
-    return best_val_acc
-
-def cnn_function(lr, num_channel):
-    num_channel = int(8 + num_channel*54)   # min 8, max 64
-    best_val_accuracy = train(lr, num_channel)    
-    return best_val_accuracy
-
-
-def augmentDataset(labeled_dataset, unlabeled_dataset, idx):
-    active_data_list = np.array(unlabeled_dataset.data_list)[idx]
-    active_label_list = np.array(unlabeled_dataset.label_list)[idx]
-    
-    labeled_dataset.data_list = labeled_dataset.data_list + active_data_list.tolist()
-    labeled_dataset.label_list = labeled_dataset.label_list + active_label_list.tolist()
+def augmentDataset(train_dataset, valid_dataset, unlabeled_dataset, idx):
+#     active_data_list = np.array(unlabeled_dataset.data_list)[idx]
+#     active_label_list = np.array(unlabeled_dataset.label_list)[idx]
+    labeled_dataset = ConcatDataset([Subset(active_loader.dataset, idx), train_dataset, valid_dataset])
+#     labeled_dataset.data_list = train_dataset.data_list + valid_dataset.data_list + active_data_list.tolist()
+#     labeled_dataset.label_list = train_dataset.label_list + valid_dataset.label_list + active_label_list.tolist()
 
     val_num = int(len(labeled_dataset)*0.20)
     train_num = len(labeled_dataset)  - val_num
 
     new_train_dataset, new_valid_dataset =random_split(labeled_dataset,[train_num, val_num])
 
-    new_train_loader = DataLoader(new_train_dataset, batch_size=8, shuffle=True)
+    new_train_loader = DataLoader(new_train_dataset, batch_size=8, shuffle=True, drop_last=True)
     new_valid_loader = DataLoader(new_valid_dataset, batch_size=8, shuffle=False)
     
     return new_train_loader, new_valid_loader
@@ -185,12 +83,13 @@ def activeTrain(idx, lr, isActiveLearn):
         valid_loader = normal_valid_loader
     
     net = copy.deepcopy(best_models[idx])
+    net.to(device)
     net.train()
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
     best_val_acc = 0.
     
-    num_epoch = 30  #수정 30
+    num_epoch = 20
     
     scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
     
@@ -222,6 +121,19 @@ def activeTrain(idx, lr, isActiveLearn):
 #     save_esemble_models(best_val_acc, net.eval())
     return best_val_acc, best_model
 
+def cnn_active_function(lr, model_index):    
+    global global_best_active_acc
+    if model_index==1:
+        idx=num_ensemble-1
+    else:
+        idx = int(model_index*num_ensemble)      
+    best_acc, best_model = activeTrain(idx, lr, isActiveLearn=True)
+    
+    if best_acc > global_best_active_acc:
+        global_best_active_acc = best_acc
+        torch.save(best_model.state_dict(), savepath_active)
+    
+    return best_acc
 
 def cnn_normal_function(lr, model_index):
     global global_best_normal_acc
@@ -237,56 +149,43 @@ def cnn_normal_function(lr, model_index):
     return best_acc
 
 
-# unlabled, labeled 데이터 분리 
-labeled_normal_data_list, labeled_abnormal_data_list, unlabeled_normal_data_list, unlabeled_abnormal_data_list = loadActiveDataset(target_class)
-unlabeled_dataset = MVTecActiveDataset(unlabeled_normal_data_list, unlabeled_abnormal_data_list, isUnlabeled=True)
-labeled_dataset = MVTecActiveDataset(labeled_normal_data_list, labeled_abnormal_data_list, isUnlabeled=False)
+
+savepath_dataloader = os.path.join(save_path, f"dataloader_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
+savepath_ensembles = os.path.join(save_path, f"ensemble_models_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
+
+# 데이터 로더 Load
+data_loaders = torch.load(savepath_dataloader)
+
+train_loader = data_loaders[0]
+valid_loader =  data_loaders[1]
+test_loader =  data_loaders[2]
+active_loader =  data_loaders[3]
+
+train_dataset = train_loader.dataset
+valid_dataset = valid_loader.dataset
+unlabeled_dataset = active_loader.dataset
 
 
-val_num = int(len(labeled_dataset)*0.15)
-test_num = int(len(labeled_dataset)*0.15)
-train_num = len(labeled_dataset)  - val_num - test_num
-
-train_dataset, valid_dataset, test_dataset =random_split(labeled_dataset,[train_num, val_num, test_num])
-
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-valid_loader = DataLoader(valid_dataset, batch_size=8, shuffle=False)
-test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False)
-
-active_loader = DataLoader(unlabeled_dataset, batch_size=activeBatchSize, shuffle=False)
-
-# 라벨된 데이터만 활용해 기본 모델  학습 및 베스트 모델 Top K개 뽑아서 uncertainty estimation에  활용
-pbounds = {'lr': (1e-3, 0.1), 'num_channel':(0, 1)}
-
-optimizer = BayesianOptimization(
-    f=cnn_function,
-    pbounds=pbounds,
-    verbose=2, # verbose = 1 prints only when a maximum is observed, verbose = 0 is silent
-    random_state=1,
-)
-
-optimizer.maximize(
-    init_points=3,
-    n_iter=40,  # 수정 40
-)
-
-# 나중에 모델 생성을 위한 베스트 모델들의 channel depth 기록
+# 앙상블 모델 Load
+best_models = torch.load(savepath_ensembles)
 best_model_num_channels=[]
+best_accuracies =[]
 for i in range(num_ensemble):
-    best_model_num_channels.append(best_models[i].num_channel)
+    best_model_num_channels.append(best_models[i].num_channel)    
+    best_accuracies.append(evaluate_accuracy(best_models[i].eval(), valid_loader, device='cpu'))
 
-# 기본 모델의 테스트셋 정확도
 original_model = best_models[np.argmax(best_accuracies)].eval()
-original_model_test_acc = evaluate_accuracy(original_model, test_loader, device)
-
+original_model_test_acc = evaluate_accuracy(original_model.cpu(), test_loader, 'cpu')
+    
+    
+    
 # 모델 K개의 ensemble prediction을 통해 unlabeled dataset 각 sample의 엔트로피 계산
 for idx, (img, label) in enumerate(active_loader):
-    img = img.to(device)
-    label = label.to(device, dtype=torch.float)
+    img = img.to('cpu')
+    label = label.to('cpu', dtype=torch.float)
        
     for model_idx in best_models:
-
-        best_models[model_idx]
+        best_models[model_idx].eval()
         label = label.view(-1,1)
         if model_idx==0:
             total_tensor = best_models[model_idx](img)
@@ -302,14 +201,16 @@ for idx, (img, label) in enumerate(active_loader):
         total_H = torch.cat((total_H, H))
     
 # 우리가 Annotation 요청할 샘플 수 및 요청 샘플 인덱스
+
 query_num = int(len(unlabeled_dataset)*sample_ratio) 
 active_vals, active_idx = torch.topk(total_H, query_num)
 
+
 # Uncertainty 높은 Top K개와 Random K개 각각 추출
-active_train_loader, active_valid_loader = augmentDataset(labeled_dataset, unlabeled_dataset, active_idx.cpu())
+active_train_loader, active_valid_loader = augmentDataset(train_dataset, valid_dataset, unlabeled_dataset, active_idx.cpu())
 
 rand_idx = np.random.permutation(len(unlabeled_dataset))[:query_num]
-normal_train_loader, normal_valid_loader = augmentDataset(labeled_dataset, unlabeled_dataset, rand_idx)
+normal_train_loader, normal_valid_loader = augmentDataset(train_dataset, valid_dataset, unlabeled_dataset, rand_idx)
 
 # Active learning 학습 진행 (기존 뽑힌 Top K개 모델만 재학습)
 global_best_active_acc = 0
@@ -366,10 +267,9 @@ normal_final_model.load_state_dict(torch.load(savepath_normal, map_location=devi
 normal_model_test_acc = evaluate_accuracy(normal_final_model.eval(), test_loader, device)
 
 with open(os.path.join(save_path,'active_results.txt'), 'a') as f:
-    f.write(f"normal_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}\n")
-    f.write(f'original_model_test_acc: {original_model_test_acc} \t active_model_test_acc:{active_model_test_acc} \
-\t normal_model_test_acc:{normal_model_test_acc}\n\n')
     
+    f.write(f"normal_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}\n")
+    f.write(f'original_model_test_acc:{original_model_test_acc}\nnormal_model_test_acc:{normal_model_test_acc}\nactive_model_test_acc:{active_model_test_acc}\n\n')    
     
     
 
