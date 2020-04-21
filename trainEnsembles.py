@@ -182,7 +182,7 @@ torch.save(best_models_cpu, savepath_ensembles)
 original_model = best_models[np.argmax(best_accuracies)].eval()
 original_model_test_acc = evaluate_accuracy(original_model.cpu(), test_loader, 'cpu')
 
-with open(os.path.join(save_path,f'{target_class}_active_results.txt'), 'a') as f:
+with open(os.path.join(save_path,'active_results.txt'), 'a') as f:
     f.write(f'original labeled dataset\n {optimizer.max}\n')
     f.write(f'original best valid accuracies -{best_accuracies}\n')
     f.write(f'original_model_test_acc: {original_model_test_acc}\n')
