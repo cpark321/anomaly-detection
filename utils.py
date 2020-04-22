@@ -23,7 +23,7 @@ def evaluate_accuracy(model, dataloader, device):
     correct = 0
     total = 0
     with torch.no_grad():
-        for i in range(3):
+        for i in range(5):
             for (img, label) in dataloader:
                 img = img.to(device)
                 label = label.to(device, dtype=torch.float)
