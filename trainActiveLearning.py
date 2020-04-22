@@ -150,8 +150,8 @@ def cnn_normal_function(lr, model_index):
 
 
 
-savepath_dataloader = os.path.join(save_path, f"dataloader_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
-savepath_ensembles = os.path.join(save_path, f"ensemble_models_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
+savepath_dataloader = os.path.join(save_path, f"dataloader_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}.pth")
+savepath_ensembles = os.path.join(save_path, f"ensemble_models_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}.pth")
 
 # 데이터 로더 Load
 data_loaders = torch.load(savepath_dataloader)

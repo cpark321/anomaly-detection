@@ -23,14 +23,15 @@ def evaluate_accuracy(model, dataloader, device):
     correct = 0
     total = 0
     with torch.no_grad():
-        for (img, label) in dataloader:
-            img = img.to(device)
-            label = label.to(device, dtype=torch.float)
-            label = label.view(-1, 1)
-            outputs = model(img)
-            predicted = (outputs.data > 0.5).float().to(device)
-            total += label.size(0)
-            correct += (predicted == label).sum().item()
+        for i in range(3):
+            for (img, label) in dataloader:
+                img = img.to(device)
+                label = label.to(device, dtype=torch.float)
+                label = label.view(-1, 1)
+                outputs = model(img)
+                predicted = (outputs.data > 0.5).float().to(device)
+                total += label.size(0)
+                correct += (predicted == label).sum().item()
     model.train()
     return correct / total
 

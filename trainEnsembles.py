@@ -105,7 +105,7 @@ active_loader = DataLoader(unlabeled_dataset, batch_size=activeBatchSize, shuffl
 
 data_loaders = {0:train_loader, 1:valid_loader, 2:test_loader, 3:active_loader}
 
-savepath_dataloader = os.path.join(save_path, f"dataloader_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
+savepath_dataloader = os.path.join(save_path, f"dataloader_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}.pth")
 torch.save(data_loaders, savepath_dataloader)
 
 # save ensembles 
@@ -170,7 +170,7 @@ optimizer.maximize(
     n_iter=40
 )
 
-savepath_ensembles = os.path.join(save_path, f"ensemble_models_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}_annotate-{sample_ratio}.pth")
+savepath_ensembles = os.path.join(save_path, f"ensemble_models_target-{target_class}_ensemble-{num_ensemble}_unlabel-{unlabeled_ratio}.pth")
 
 best_models_cpu={}
 for i in best_models:
